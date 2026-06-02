@@ -2,110 +2,226 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Distribuída RMI</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
         }
-        .calculadora-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            width: 350px;
+
+        .calculadora {
+            background-color: #1e2530;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            width: 320px;
         }
-        h2 {
+
+        .marca {
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
             text-align: center;
-            color: #333;
-            margin-bottom: 24px;
-        }
-        .input-group {
             margin-bottom: 15px;
+            text-transform: uppercase;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
+
+        /* Visor digital estilo LCD/OLED */
+        .visor-container {
+            background-color: #0f141c;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: right;
+            border: 1px solid #2d3748;
+        }
+
+        .expressao-anterior {
+            color: #64748b;
             font-size: 14px;
+            min-height: 20px;
+            margin-bottom: 4px;
+            word-wrap: break-word;
         }
-        input[type="number"], select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
+
+        .visor-principal {
+            color: #f8fafc;
+            font-size: 36px;
+            font-weight: 600;
+            overflow-x: auto;
+            white-space: nowrap;
         }
+
+        /* Grade de Botões */
+        .teclado {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 50%; /* Botões redondos clássicos */
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
+            transition: all 0.15s ease;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 1;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        /* Cores dos tipos de botões */
+        .btn-numero {
+            background-color: #2d3545;
+            color: #f8fafc;
         }
-        .resultado {
-            margin-top: 20px;
-            padding: 12px;
-            background-color: #e9ecef;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
+        .btn-numero:hover { background-color: #3d4659; }
+
+        .btn-operador {
+            background-color: #38bdf8;
+            color: #0f172a;
         }
-        .erro {
-            color: #dc3545;
-            background-color: #f8d7da;
+        .btn-operador:hover { background-color: #7dd3fc; }
+
+        .btn-util {
+            background-color: #475569;
+            color: #f8fafc;
         }
+        .btn-util:hover { background-color: #64748b; }
+
+        .btn-igual {
+            background-color: #f97316;
+            color: white;
+            grid-column: span 1;
+        }
+        .btn-igual:hover { background-color: #fb923c; }
+
+        /* Campos ocultos para enviar os dados para o Java */
+        #form-envio { display: none; }
     </style>
 </head>
 <body>
 
-<div class="calculadora-card">
-    <h2>Calculadora RMI</h2>
+<div class="calculadora">
+    <div class="marca">SISTEMA DISTRIBUÍDO RMI</div>
     
-    <form action="/calcular" method="post">
-        <div class="input-group">
-            <label>Número 1</label>
-            <input type="number" step="any" name="num1" th:value="${num1}" required>
-        </div>
-        
-        <div class="input-group">
-            <label>Operação</label>
-            <select name="operacao">
-                <option value="somar">Somar (+)</option>
-                <option value="subtrair">Subtrair (-)</option>
-                <option value="multiplicar">Multiplicar (*)</option>
-                <option value="dividir">Dividir (/)</option>
-            </select>
-        </div>
+    <div class="visor-container">
+        <div class="expressao-anterior" id="historico" th:text="${erro != null ? erro : (num1 != null ? num1 + ' ' + operacao + ' ' + num2 : '')}"></div>
+        <div class="visor-principal" id="visor" th:text="${resultado != null ? resultado : '0'}">0</div>
+    </div>
 
-        <div class="input-group">
-            <label>Número 2</label>
-            <input type="number" step="any" name="num2" th:value="${num2}" required>
-        </div>
-        
-        <button type="submit">Calcular</button>
-    </form>
+    <div class="teclado">
+        <button class="btn-util" onclick="limparVisor()">C</button>
+        <button class="btn-util" onclick="apagarUltimo()">⌫</button>
+        <button class="btn-util" onclick="definirOperacao('dividir')">/</button>
+        <button class="btn-operador" onclick="definirOperacao('multiplicar')">*</button>
 
-    <div class="resultado" th:if="${resultado}" th:text="${resultado}"></div>
-    
-    <div class="resultado erro" th:if="${erro}" th:text="${erro}"></div>
+        <button class="btn-numero" onclick="digitarNumero('7')">7</button>
+        <button class="btn-numero" onclick="digitarNumero('8')">8</button>
+        <button class="btn-numero" onclick="digitarNumero('9')">9</button>
+        <button class="btn-operador" onclick="definirOperacao('subtrair')">-</button>
+
+        <button class="btn-numero" onclick="digitarNumero('4')">4</button>
+        <button class="btn-numero" onclick="digitarNumero('5')">5</button>
+        <button class="btn-numero" onclick="digitarNumero('6')">6</button>
+        <button class="btn-operador" onclick="definirOperacao('somar')">+</button>
+
+        <button class="btn-numero" onclick="digitarNumero('1')">1</button>
+        <button class="btn-numero" onclick="digitarNumero('2')">2</button>
+        <button class="btn-numero" onclick="digitarNumero('3')">3</button>
+        <button class="btn-igual" onclick="solicitarCalculo()">=</button>
+
+        <button class="btn-numero" style="grid-column: span 2; border-radius: 30px; aspect-ratio: auto;" onclick="digitarNumero('0')">0</button>
+        <button class="btn-numero" onclick="digitarNumero('.')">.</button>
+    </div>
 </div>
+
+<form id="form-envio" action="/calcular" method="post">
+    <input type="hidden" name="num1" id="input_num1">
+    <input type="hidden" name="num2" id="input_num2">
+    <input type="hidden" name="operacao" id="input_operacao">
+</form>
+
+<script>
+    let memoriaNumero1 = "";
+    let operacaoPendente = "";
+    let reiniciarVisor = false;
+
+    function digitarNumero(num) {
+        const visor = document.getElementById('visor');
+        
+        // Se acabou de dar um resultado ou escolheu operador, limpa o visor para o novo número
+        if (visor.innerText === '0' || reiniciarVisor) {
+            visor.innerText = num;
+            reiniciarVisor = false;
+        } else {
+            // Evita colocar múltiplos pontos decimais
+            if (num === '.' && visor.innerText.includes('.')) return;
+            visor.innerText += num;
+        }
+    }
+
+    function definirOperacao(op) {
+        const visor = document.getElementById('visor');
+        memoriaNumero1 = visor.innerText;
+        operacaoPendente = op;
+        
+        // Exibe o rastro no topo do visor do que está acontecendo
+        document.getElementById('historico').innerText = memoriaNumero1 + " " + mapearSimbolo(op);
+        reiniciarVisor = true;
+    }
+
+    function limparVisor() {
+        document.getElementById('visor').innerText = '0';
+        document.getElementById('historico').innerText = '';
+        memoriaNumero1 = "";
+        operacaoPendente = "";
+    }
+
+    function apagarUltimo() {
+        const visor = document.getElementById('visor');
+        if (visor.innerText.length > 1) {
+            visor.innerText = visor.innerText.slice(0, -1);
+        } else {
+            visor.innerText = '0';
+        }
+    }
+
+    function solicitarCalculo() {
+        if (!memoriaNumero1 || !operacaoPendente) return;
+
+        const numero2 = document.getElementById('visor').innerText;
+
+        // Alimenta o formulário invisível do HTML
+        document.getElementById('input_num1').value = memoriaNumero1;
+        document.getElementById('input_num2').value = numero2;
+        document.getElementById('input_operacao').value = operacaoPendente;
+
+        // Dispara o POST para o Spring Boot processar no RMI
+        document.getElementById('form-envio').submit();
+    }
+
+    function mapearSimbolo(op) {
+        switch(op) {
+            case 'somar': return '+';
+            case 'subtrair': return '-';
+            case 'multiplicar': return '*';
+            case 'dividir': return '/';
+            default: return '';
+        }
+    }
+</script>
 
 </body>
 </html>
