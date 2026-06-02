@@ -1,0 +1,9 @@
+FROM eclipse-temurin:17-jdk-jammy
+WORKDIR /app
+
+COPY src/main/java/ /app/src
+
+RUN javac /app/src/calculadora/Calculadora.java /app/src/calculadora/CalculadoraImpl.java /app/src/calculadora/Servidor.java
+
+EXPOSE 1099
+CMD ["java", "-cp", "/app/src", "calculadora.Servidor"]

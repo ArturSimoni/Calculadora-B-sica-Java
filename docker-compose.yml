@@ -1,0 +1,20 @@
+services:
+  servidor-rmi:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: servidor-rmi
+    ports:
+      - "1099:1099"
+
+  cliente-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: cliente-web
+    ports:
+      - "8080:8080" # Porta para você acessar no seu navegador
+    environment:
+      - RMI_HOST=servidor-rmi
+    depends_on:
+      - servidor-rmi

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Distribuída RMI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .calculadora-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 24px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .resultado {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .erro {
+            color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculadora-card">
+    <h2>Calculadora RMI</h2>
+    
+    <form action="/calcular" method="post">
+        <div class="input-group">
+            <label>Número 1</label>
+            <input type="number" step="any" name="num1" th:value="${num1}" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Operação</label>
+            <select name="operacao">
+                <option value="somar">Somar (+)</option>
+                <option value="subtrair">Subtrair (-)</option>
+                <option value="multiplicar">Multiplicar (*)</option>
+                <option value="dividir">Dividir (/)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Número 2</label>
+            <input type="number" step="any" name="num2" th:value="${num2}" required>
+        </div>
+        
+        <button type="submit">Calcular</button>
+    </form>
+
+    <div class="resultado" th:if="${resultado}" th:text="${resultado}"></div>
+    
+    <div class="resultado erro" th:if="${erro}" th:text="${erro}"></div>
+</div>
+
+</body>
+</html>
