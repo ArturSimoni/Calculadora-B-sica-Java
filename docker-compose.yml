@@ -13,7 +13,7 @@ services:
       dockerfile: Dockerfile.client
     container_name: cliente-web
     ports:
-      - "8080:8080" # Porta para você acessar no seu navegador
+      - "8080:8080"
     environment:
       - RMI_HOST=servidor-rmi
     depends_on:
